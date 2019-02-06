@@ -697,21 +697,13 @@ export default class VideoPlayer extends React.Component {
             }
             style={{
               position: 'absolute',
-              bottom: 0,
+              bottom: 15,
               width: videoWidth,
               opacity: this.state.controlsOpacity,
               flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              justifyContent: 'center',
             }}>
-            {/* Current time display */}
-            <Text
-              style={[
-                this.props.textStyle,
-                { backgroundColor: 'transparent', marginLeft: 5 },
-              ]}>
-              {this._getMMSSFromMillis(this.state.playbackInstancePosition)}
-            </Text>
 
             {/* Seek bar */}
             <TouchableWithoutFeedback
@@ -733,15 +725,6 @@ export default class VideoPlayer extends React.Component {
               />
             </TouchableWithoutFeedback>
 
-            {/* Duration display */}
-            <Text
-              style={[
-                this.props.textStyle,
-                { backgroundColor: 'transparent', marginRight: 5 },
-              ]}>
-              {this._getMMSSFromMillis(this.state.playbackInstanceDuration)}
-            </Text>
-
             {/* Fullscreen control */}
             {this.props.showFullscreenButton && (
               <Control
@@ -759,6 +742,48 @@ export default class VideoPlayer extends React.Component {
                 )}
               </Control>
             )}
+          </Animated.View>
+          <Animated.View
+            pointerEvents={
+              this.state.controlsState === CONTROL_STATES.HIDDEN
+                ? 'none'
+                : 'auto'
+            }
+            style={{
+              position: 'absolute',
+              bottom: 5,
+              width: videoWidth,
+              opacity: this.state.controlsOpacity,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              marginBottom: 5,
+            }}
+          >
+            {/* Current time display */}
+            <Text
+              style={[
+                this.props.textStyle,
+                { backgroundColor: 'transparent', marginRight: 5 },
+              ]}>
+              {this._getMMSSFromMillis(this.state.playbackInstancePosition)}
+            </Text>
+
+            <Text
+              style={[
+                this.props.textStyle,
+                { backgroundColor: 'transparent', marginRight: 5 },
+              ]}
+            >／</Text>
+
+            {/* Duration display */}
+            <Text
+              style={[
+                this.props.textStyle,
+                { backgroundColor: 'transparent', marginRight: 10 },
+              ]}>
+              {this._getMMSSFromMillis(this.state.playbackInstanceDuration)}
+            </Text>
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
