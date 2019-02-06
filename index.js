@@ -122,6 +122,10 @@ export default class VideoPlayer extends React.Component {
     switchToPortrait: PropTypes.func,
 
     showControlsOnLoad: PropTypes.bool,
+
+    // Controls callback
+    showControlsCallback: PropTypes.func,
+    hideControlsCallback: PropTypes.func,
   };
 
   static defaultProps = {
@@ -161,6 +165,8 @@ export default class VideoPlayer extends React.Component {
       );
     },
     showControlsOnLoad: false,
+    showControlsCallback: () => {},
+    hideControlsCallback: () => {},
   };
 
   constructor(props) {
@@ -183,6 +189,9 @@ export default class VideoPlayer extends React.Component {
         ? CONTROL_STATES.SHOWN
         : CONTROL_STATES.HIDDEN,
     };
+    if (props.showControlsOnLoad) {
+      props.showControlsCallback();
+    }
   }
 
   async componentDidMount() {
@@ -498,6 +507,12 @@ export default class VideoPlayer extends React.Component {
         this._resetControlsTimer();
       }
     });
+
+    try {
+      this.props.showControlsCallback();
+    } catch (e) {
+      console.error('Uncaught error when calling props.showControlsCallback', e);
+    }
   };
 
   _hideControls = (immediate = false) => {
@@ -516,6 +531,12 @@ export default class VideoPlayer extends React.Component {
         this.setState({ controlsState: CONTROL_STATES.HIDDEN });
       }
     });
+
+    try {
+      this.props.hideControlsCallback();
+    } catch (e) {
+      console.error('Uncaught error when calling props.hideControlsCallback', e);
+    }
   };
 
   _onTimerDone = () => {
