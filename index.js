@@ -257,8 +257,11 @@ export default class VideoPlayer extends React.Component {
           ' [shouldPlay] ',
           this.state.shouldPlay
         );
-
+      
       this.setState({ playbackState, lastPlaybackStateUpdate: Date.now() });
+      if(playbackState === PLAYBACK_STATES.ENDED){
+        this._showControls();
+      }
     }
   }
 
@@ -472,21 +475,28 @@ export default class VideoPlayer extends React.Component {
   }
 
   _toggleControls = () => {
-    switch (this.state.controlsState) {
+    if (this.state.playbackState === PLAYBACK_STATES.ENDED) {
+      this.setState({ controlsState: CONTROL_STATES.HIDING });
+      this._hideControls(true);
+      this._replay();
+    } else switch (this.state.controlsState) {
       case CONTROL_STATES.SHOWN:
         // If the controls are currently shown, a tap should hide controls quickly
         this.setState({ controlsState: CONTROL_STATES.HIDING });
         this._hideControls(true);
+        this._togglePlay();
         break;
       case CONTROL_STATES.HIDDEN:
         // If the controls are currently, show controls with fade-in animation
         this._showControls();
         this.setState({ controlsState: CONTROL_STATES.SHOWING });
+        this._togglePlay();
         break;
       case CONTROL_STATES.HIDING:
         // If controls are fading out, a tap should reverse, and show controls
         this.setState({ controlsState: CONTROL_STATES.SHOWING });
         this._showControls();
+        this._togglePlay();
         break;
       case CONTROL_STATES.SHOWING:
         // A tap when the controls are fading in should do nothing
@@ -587,13 +597,15 @@ export default class VideoPlayer extends React.Component {
         hitSlop={{ top: 20, left: 20, bottom: 20, right: 20 }}
         onPress={() => {
           this._resetControlsTimer();
-          callback();
+          if(callback){
+            callback();
+          }
         }}>
         <View
           style={
             center
               ? {
-                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  // backgroundColor: 'rgba(0, 0, 0, 0.5)',
                   justifyContent: 'center',
                   width: centeredContentWidth,
                   height: centeredContentWidth,
@@ -647,18 +659,33 @@ export default class VideoPlayer extends React.Component {
           style={{
             backgroundColor: 'black',
           }}>
+          {/* Video */}
           <Video
-            source={source}
-            ref={component => {
-              this._playbackInstance = component;
-              ref && ref(component);
-            }}
-            onPlaybackStatusUpdate={this._playbackCallback.bind(this)}
+              source={source}
+              ref={component => {
+                this._playbackInstance = component;
+                ref && ref(component);
+              }}
+              onPlaybackStatusUpdate={this._playbackCallback.bind(this)}
+              style={{
+                width: videoWidth,
+                height: videoHeight,
+              }}
+              {...otherVideoProps}
+          />
+
+          {/* Fade background */}
+          <Animated.View
+            pointerEvents={'none'}
             style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
               width: videoWidth,
               height: videoHeight,
+              opacity: this.state.controlsOpacity,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
             }}
-            {...otherVideoProps}
           />
 
           {/* Spinner */}
@@ -677,15 +704,14 @@ export default class VideoPlayer extends React.Component {
             (this.state.playbackState == PLAYBACK_STATES.PLAYING ||
               this.state.playbackState == PLAYBACK_STATES.PAUSED) && (
               <CenteredView
-                pointerEvents={
-                  this.state.controlsState === CONTROL_STATES.HIDDEN
-                    ? 'none'
-                    : 'auto'
-                }
+                pointerEvents={'none'}
                 style={{
                   opacity: this.state.controlsOpacity,
                 }}>
-                <Control center={true} callback={this._togglePlay.bind(this)}>
+                <Control
+                  center={true}
+                  // callback={this._togglePlay.bind(this)}
+                >
                   {this.state.playbackState == PLAYBACK_STATES.PLAYING ? (
                     <PauseIcon />
                   ) : (
@@ -697,8 +723,15 @@ export default class VideoPlayer extends React.Component {
 
           {/* Replay button to show at the end of a video */}
           {this.state.playbackState == PLAYBACK_STATES.ENDED && (
-            <CenteredView>
-              <Control center={true} callback={this._replay.bind(this)}>
+            <CenteredView
+              pointerEvents={'none'}
+              style={{
+                opacity: this.state.controlsOpacity,
+              }}>
+              <Control
+                center={true}
+                // callback={this._replay.bind(this)}
+              >
                 <ReplayIcon />
               </Control>
             </CenteredView>
